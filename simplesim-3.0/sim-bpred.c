@@ -97,6 +97,11 @@ static int comb_nelt = 1;
 static int comb_config[1] =
   { /* meta_table_size */1024 };
 
+/* Agree predictor config (<l1size> <l2size> <hist_size> <xor>) */
+static int agree_nelt = 4;
+static int agree_config[4] =
+  { /* l1size */1, /* l2size */1024, /* hist */8, /* xor */FALSE};
+
 /* return address stack (RAS) size */
 static int ras_size = 8;
 
@@ -146,7 +151,7 @@ sim_reg_options(struct opt_odb_t *odb)
 	       /* print */TRUE, /* format */NULL);
 
   opt_reg_string(odb, "-bpred",
-		 "branch predictor type {nottaken|taken|bimod|2lev|comb}",
+		 "branch predictor type {nottaken|taken|bimod|2lev|comb|agree}",
                  &pred_type, /* default */"bimod",
                  /* print */TRUE, /* format */NULL);
 
@@ -168,6 +173,13 @@ sim_reg_options(struct opt_odb_t *odb)
 		   comb_config, comb_nelt, &comb_nelt,
 		   /* default */comb_config,
 		   /* print */TRUE, /* format */NULL, /* !accrue */FALSE);
+  
+    opt_reg_int_list(odb, "-bpred:agree",
+                   "2-level agree predictor config "
+		   "(<l1size> <l2size> <hist_size> <xor>)",
+                   agree_config, agree_nelt, &agree_nelt,
+		   /* default */agree_config,
+                   /* print */TRUE, /* format */NULL, /* !accrue */FALSE);
 
   opt_reg_int(odb, "-bpred:ras",
               "return address stack size (0 for no return stack)",
@@ -252,6 +264,25 @@ sim_check_options(struct opt_odb_t *odb, int argc, char **argv)
 			  /* meta table size */comb_config[0],
 			  /* history reg size */twolev_config[2],
 			  /* history xor address */twolev_config[3],
+			  /* btb sets */btb_config[0],
+			  /* btb assoc */btb_config[1],
+			  /* ret-addr stack size */ras_size);
+    }
+  else if (!mystricmp(pred_type, "agree"))
+    {
+      /* 2-level agree predictor, bpred_create() checks args */
+      if (agree_nelt != 4)
+	fatal("bad agree pred config (<l1size> <l2size> <hist_size> <xor>)");
+      if (btb_nelt != 2)
+	fatal("bad btb config (<num_sets> <associativity>)");
+
+      pred = bpred_create(BPredAgree,
+			  /* bimod table size */0,
+			  /* 2lev l1 size */agree_config[0],
+			  /* 2lev l2 size */agree_config[1],
+			  /* meta table size */0,
+			  /* history reg size */agree_config[2],
+			  /* history xor address */agree_config[3],
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
 			  /* ret-addr stack size */ras_size);

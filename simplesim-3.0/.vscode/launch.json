@@ -6,7 +6,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/sim-bpred",
-            "args": ["-bpred", "bimod", "benchmarks/anagram.alpha", "words", "<benchmarks/anagram.in", ">OUT"],
+            "args": ["-bpred", "agree", "benchmarks/anagram.alpha", "words", "<benchmarks/anagram.in", ">OUT"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
