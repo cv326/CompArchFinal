@@ -104,6 +104,7 @@ enum bpred_class {
   BPred2bit,			/* 2-bit saturating cntr pred (dir mapped) */
   BPredTaken,			/* static predict taken */
   BPredNotTaken,		/* static predict not taken */
+  BPredAgree,     /* 2-level 2-bit Agree predictor */
   BPred_NUM
 };
 
@@ -112,6 +113,7 @@ struct bpred_btb_ent_t {
   md_addr_t addr;		/* address of branch being tracked */
   enum md_opcode op;		/* opcode of branch corresp. to addr */
   md_addr_t target;		/* last destination of branch when taken */
+  int bias;     /* bias bit for agree algorithm --> 1 = taken, 0 = not taken */
   struct bpred_btb_ent_t *prev, *next; /* lru chaining pointers */
 };
 
@@ -141,6 +143,7 @@ struct bpred_t {
     struct bpred_dir_t *bimod;	  /* first direction predictor */
     struct bpred_dir_t *twolev;	  /* second direction predictor */
     struct bpred_dir_t *meta;	  /* meta predictor */
+    struct bpred_dir_t *agree;  /* agree predictor */
   } dirpred;
 
   struct {
@@ -178,11 +181,13 @@ struct bpred_update_t {
   char *pdir1;		/* direction-1 predictor counter */
   char *pdir2;		/* direction-2 predictor counter */
   char *pmeta;		/* meta predictor counter */
+  char *agree;    /* agree predictor counter */
   struct {		/* predicted directions */
     unsigned int ras    : 1;	/* RAS used */
     unsigned int bimod  : 1;    /* bimodal predictor */
     unsigned int twolev : 1;    /* 2-level predictor */
     unsigned int meta   : 1;    /* meta predictor (0..bimod / 1..2lev) */
+    unsigned int agree  : 1;    /* agree predictor */
   } dir;
 };
 

@@ -107,6 +107,13 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
   case BPred2bit:
     pred->dirpred.bimod = 
       bpred_dir_create(class, bimod_size, 0, 0, 0);
+    
+    break;
+  
+  case BPredAgree:
+    pred->dirpred.agree = bpred_dir_create(class, l1size, l2size, shift_width, xor); //agree uses 2 level bpred and may need to xor bias and PHT
+    
+    break;
 
   case BPredTaken:
   case BPredNotTaken:
@@ -121,44 +128,44 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
   switch (class) {
   case BPredComb:
   case BPred2Level:
+  case BPredAgree:  // might need to add some stuff herre to do with bias bit
   case BPred2bit:
     {
       int i;
 
       /* allocate BTB */
       if (!btb_sets || (btb_sets & (btb_sets-1)) != 0)
-	fatal("number of BTB sets must be non-zero and a power of two");
+	      fatal("number of BTB sets must be non-zero and a power of two");
       if (!btb_assoc || (btb_assoc & (btb_assoc-1)) != 0)
-	fatal("BTB associativity must be non-zero and a power of two");
+	      fatal("BTB associativity must be non-zero and a power of two");
 
       if (!(pred->btb.btb_data = calloc(btb_sets * btb_assoc,
 					sizeof(struct bpred_btb_ent_t))))
-	fatal("cannot allocate BTB");
+	      fatal("cannot allocate BTB");
 
       pred->btb.sets = btb_sets;
       pred->btb.assoc = btb_assoc;
 
       if (pred->btb.assoc > 1)
-	for (i=0; i < (pred->btb.assoc*pred->btb.sets); i++)
-	  {
-	    if (i % pred->btb.assoc != pred->btb.assoc - 1)
-	      pred->btb.btb_data[i].next = &pred->btb.btb_data[i+1];
-	    else
-	      pred->btb.btb_data[i].next = NULL;
-	    
-	    if (i % pred->btb.assoc != pred->btb.assoc - 1)
-	      pred->btb.btb_data[i+1].prev = &pred->btb.btb_data[i];
-	  }
+      for (i=0; i < (pred->btb.assoc*pred->btb.sets); i++)
+        {
+          if (i % pred->btb.assoc != pred->btb.assoc - 1)
+            pred->btb.btb_data[i].next = &pred->btb.btb_data[i+1];
+          else
+            pred->btb.btb_data[i].next = NULL;
+          
+          if (i % pred->btb.assoc != pred->btb.assoc - 1)
+            pred->btb.btb_data[i+1].prev = &pred->btb.btb_data[i];
+        }
 
       /* allocate retstack */
       if ((retstack_size & (retstack_size-1)) != 0)
-	fatal("Return-address-stack size must be zero or a power of two");
+	      fatal("Return-address-stack size must be zero or a power of two");
       
       pred->retstack.size = retstack_size;
       if (retstack_size)
-	if (!(pred->retstack.stack = calloc(retstack_size, 
-					    sizeof(struct bpred_btb_ent_t))))
-	  fatal("cannot allocate return-address-stack");
+	      if (!(pred->retstack.stack = calloc(retstack_size, sizeof(struct bpred_btb_ent_t))))
+	        fatal("cannot allocate return-address-stack");
       pred->retstack.tos = retstack_size - 1;
       
       break;
