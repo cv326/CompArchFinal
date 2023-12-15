@@ -79,7 +79,7 @@ static struct mem_t *mem = NULL;
 /* maximum number of inst's to execute */
 static unsigned int max_insts;
 
-/* branch predictor type {nottaken|taken|perfect|bimod|2lev} */
+/* branch predictor type {nottaken|taken|perfect|bimod|2lev|agree} */
 static char *pred_type;
 
 /* bimodal predictor config (<table_size>) */

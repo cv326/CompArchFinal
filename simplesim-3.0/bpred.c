@@ -321,12 +321,19 @@ bpred_dir_config(
       name, pred_dir->config.two.l1size, pred_dir->config.two.shift_width,
       pred_dir->config.two.xor ? "" : "no", pred_dir->config.two.l2size);
     break;
+  
+  case BPredAgree:
+    fprintf(stream,
+      "pred_dir: %s: 2-lvl: %d l1-sz, %d bits/ent, %s xor, %d l2-sz, direct-mapped\n",
+      name, pred_dir->config.two.l1size, pred_dir->config.two.shift_width,
+      pred_dir->config.two.xor ? "" : "no", pred_dir->config.two.l2size);
+    break;
 
   case BPred2bit:
     fprintf(stream, "pred_dir: %s: 2-bit: %d entries, direct-mapped\n",
       name, pred_dir->config.bimod.size);
     break;
-
+  
   case BPredTaken:
     fprintf(stream, "pred_dir: %s: predict taken\n", name);
     break;
@@ -357,6 +364,13 @@ bpred_config(struct bpred_t *pred,	/* branch predictor instance */
 
   case BPred2Level:
     bpred_dir_config (pred->dirpred.twolev, "2lev", stream);
+    fprintf(stream, "btb: %d sets x %d associativity", 
+	    pred->btb.sets, pred->btb.assoc);
+    fprintf(stream, "ret_stack: %d entries", pred->retstack.size);
+    break;
+
+  case BPredAgree:
+    bpred_dir_config (pred->dirpred.twolev, "agree", stream);
     fprintf(stream, "btb: %d sets x %d associativity", 
 	    pred->btb.sets, pred->btb.assoc);
     fprintf(stream, "ret_stack: %d entries", pred->retstack.size);
@@ -797,6 +811,11 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
     }
   else
     {
+      /* BTB hit, so return target because Agree doesn't care about taken state*/
+      if (pred->class == BPredAgree)
+      {
+        return(pbtb->target);
+      }
       /* BTB hit, so return target if it's a predicted-taken branch */
       return ((*(dir_update_ptr->pdir1) >= 2)
 	      ? /* taken */ pbtb->target
@@ -929,8 +948,10 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
     }
 
   /* find BTB entry if it's a taken branch (don't allocate for non-taken) */
-  if (taken)
-    {
+  // this rule doesn;t apply to Agree algo because entries are made into BTB regardless of if taken or not
+  // Agree algorithm predicts not to taken/not taken but to the result of the first branch access
+  if (taken || pred->class == BPredAgree)
+  {
       index = (baddr >> MD_BR_SHIFT) & (pred->btb.sets - 1);
       
       if (pred->btb.assoc > 1)
@@ -990,8 +1011,8 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 	  /* else pbtb is already MRU item; do nothing */
 	}
       else
-	pbtb = &pred->btb.btb_data[index];
-    }
+	    pbtb = &pred->btb.btb_data[index];
+  }
       
   /* 
    * Now 'p' is a possibly null pointer into the direction prediction table, 
@@ -1055,9 +1076,13 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
   if (pbtb)
     {
       /* update current information */
-      dassert(taken);
+      //Agree algo doesn't care if branch was taken
+      if (pred->class != BPredAgree){
+        dassert(taken);
+      }
 
-      if (pbtb->addr == baddr)
+      //In Agree algo, BTB entry is set only upon the first time it is accessed
+      if (pbtb->addr == baddr && pred->class != BPredAgree)
 	{
 	  if (!correct)
 	    pbtb->target = btarget;
@@ -1068,6 +1093,7 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 	  pbtb->addr = baddr;
 	  pbtb->op = op;
 	  pbtb->target = btarget;
+    pbtb->bias = taken;
 	}
     }
 }
