@@ -942,12 +942,24 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
       int l1index, shift_reg;
       
       /* also update appropriate L1 history register */
-      l1index =
-	(baddr >> MD_BR_SHIFT) & (pred->dirpred.twolev->config.two.l1size - 1);
-      shift_reg =
-	(pred->dirpred.twolev->config.two.shiftregs[l1index] << 1) | (!!taken);
-      pred->dirpred.twolev->config.two.shiftregs[l1index] =
-	shift_reg & ((1 << pred->dirpred.twolev->config.two.shift_width) - 1);
+      if (pred->class == BPredAgree)
+      {
+        l1index =
+    (baddr >> MD_BR_SHIFT) & (pred->dirpred.agree->config.two.l1size - 1);
+        shift_reg =
+    (pred->dirpred.agree->config.two.shiftregs[l1index] << 1) | (!!taken);
+        pred->dirpred.agree->config.two.shiftregs[l1index] =
+    shift_reg & ((1 << pred->dirpred.agree->config.two.shift_width) - 1);
+      }
+      else
+      {
+        l1index =
+    (baddr >> MD_BR_SHIFT) & (pred->dirpred.twolev->config.two.l1size - 1);
+        shift_reg =
+    (pred->dirpred.twolev->config.two.shiftregs[l1index] << 1) | (!!taken);
+        pred->dirpred.twolev->config.two.shiftregs[l1index] =
+    shift_reg & ((1 << pred->dirpred.twolev->config.two.shift_width) - 1);
+      }
     }
 
   /* find BTB entry if it's a taken branch (don't allocate for non-taken) */
@@ -1026,6 +1038,23 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
   /* update state (but not for jumps) */
   if (dir_update_ptr->pdir1)
     {
+    if (pred->class == BPredAgree)
+    {
+      // Increment PHT saturating counter if bias and taken agree
+      if ((taken > 0 && pbtb->bias > 0) || (taken == 0 && pbtb->bias == 0))
+      {
+        if (*dir_update_ptr->pdir1 < 3)
+          ++*dir_update_ptr->pdir1;
+      }
+      // Decrement PHT saturating counter if bias and taken disagree
+      else
+      { /* not taken */
+        if (*dir_update_ptr->pdir1 > 0)
+          --*dir_update_ptr->pdir1;
+      }
+    }
+    else
+    {
       if (taken)
 	{
 	  if (*dir_update_ptr->pdir1 < 3)
@@ -1036,6 +1065,8 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 	  if (*dir_update_ptr->pdir1 > 0)
 	    --*dir_update_ptr->pdir1;
 	}
+    }
+
     }
 
   /* combining predictor also updates second predictor and meta predictor */
