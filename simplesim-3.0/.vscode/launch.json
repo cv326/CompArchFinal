@@ -2,11 +2,107 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "debug bpred",
+            "name": "debug anagram",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/sim-bpred",
             "args": ["-bpred", "agree", "benchmarks/anagram.alpha", "words", "<benchmarks/anagram.in", ">OUT"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for lldb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build",
+            "linux": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb"
+            },
+            "windows": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb.exe"
+            },
+            "osx": {
+                "MIMode": "lldb",
+                "miDebuggerPath": "/usr/local/bin/lldb-mi"
+            }
+        },
+        {
+            "name": "debug go",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/sim-bpred",
+            "args": ["-bpred", "agree", "benchmarks/go.alpha", "50", "9", "benchmarks/2stone9.in", ">OUT"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for lldb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build",
+            "linux": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb"
+            },
+            "windows": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb.exe"
+            },
+            "osx": {
+                "MIMode": "lldb",
+                "miDebuggerPath": "/usr/local/bin/lldb-mi"
+            }
+        },
+        {
+            "name": "debug compress",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/sim-bpred",
+            "args": ["-bpred", "agree", "benchmarks/compress95.alpha", "<benchmarks/compress95.in", ">OUT"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for lldb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build",
+            "linux": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb"
+            },
+            "windows": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb.exe"
+            },
+            "osx": {
+                "MIMode": "lldb",
+                "miDebuggerPath": "/usr/local/bin/lldb-mi"
+            }
+        },
+        {
+            "name": "debug gcc",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/sim-bpred",
+            "args": ["-bpred", "agree", "benchmarks/cc1.alpha", "-O", "<benchmarks/1stmt.i", ">OUT"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
